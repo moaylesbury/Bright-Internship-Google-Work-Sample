@@ -17,6 +17,10 @@ def collate_tags(vid):
     return tagstr
 
 
+def lower_tags(tag):
+    return tag[0:1] + tag[1:].lower()
+
+
 class VideoPlayer:
     """A class used to represent a Video Player."""
 
@@ -342,7 +346,29 @@ class VideoPlayer:
         Args:
             search_term: The query to be used in search.
         """
-        print("search_videos needs implementation")
+        # print("search_videos needs implementation")
+        term = search_term.lower()
+
+        matches = []
+        options = {}
+
+        for vid in self._video_library.get_all_videos():
+            if term in vid.title.lower():
+                matches.append(vid)
+
+        if len(matches) == 0:
+            print("No search results for " + term)
+        else:
+            print("Here are the results for " + term + ":")
+            for count, match in enumerate(matches):
+                print(str(count+1) + ") " + self.get_full_title(match.video_id))
+                options[count+1] = match.video_id
+            print("Would you like to play any of the above? If yes, specify the number of the video.")
+            print("If your answer is not a valid number, we will assume it's a no.")
+            inp = input()
+            if inp.isnumeric():
+                if int(inp) in options.keys():
+                    self.play_video(options[int(inp)])
 
     def search_videos_tag(self, video_tag):
         """Display all videos whose tags contains the provided tag.
@@ -350,7 +376,29 @@ class VideoPlayer:
         Args:
             video_tag: The video tag to be used in search.
         """
-        print("search_videos_tag needs implementation")
+        # print("search_videos_tag needs implementation")
+        term = lower_tags(video_tag)
+
+        matches = []
+        options = {}
+
+        for vid in self._video_library.get_all_videos():
+            if term in [lower_tags(tag) for tag in vid.tags]:
+                matches.append(vid)
+
+        if len(matches) == 0:
+            print("No search results for " + term)
+        else:
+            print("Here are the results for " + term + ":")
+            for count, match in enumerate(matches):
+                print(str(count + 1) + ") " + self.get_full_title(match.video_id))
+                options[count + 1] = match.video_id
+            print("Would you like to play any of the above? If yes, specify the number of the video.")
+            print("If your answer is not a valid number, we will assume it's a no.")
+            inp = input()
+            if inp.isnumeric():
+                if int(inp) in options.keys():
+                    self.play_video(options[int(inp)])
 
     def flag_video(self, video_id, flag_reason=""):
         """Mark a video as flagged.
