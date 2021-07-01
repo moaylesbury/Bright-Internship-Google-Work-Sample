@@ -29,6 +29,7 @@ class VideoPlayer:
         self.currently_playing = None
         self.paused = False
         self.playlists = {}
+        self.flags = {}
 
     def number_of_videos(self):
         num_videos = len(self._video_library.get_all_videos())
@@ -74,11 +75,14 @@ class VideoPlayer:
         vid = self._video_library.get_video(video_id)
 
         if vid is not None:
-            if self.currently_playing is not None:
-                print("Stopping video: " + self._video_library.get_video(self.currently_playing).title)
-            print("Playing video: " + vid.title)
-            self.paused = False
-            self.currently_playing = vid.video_id
+            if vid.video_id in self.flags.keys():
+                print("Cannot play video: Video is currently flagged (reason: " + self.flags[vid.video_id] + ")")
+            else:
+                if self.currently_playing is not None:
+                    print("Stopping video: " + self._video_library.get_video(self.currently_playing).title)
+                print("Playing video: " + vid.title)
+                self.paused = False
+                self.currently_playing = vid.video_id
         else:
             print("Cannot play video: Video does not exist")
             self.currently_playing = None
@@ -101,14 +105,24 @@ class VideoPlayer:
         if self.currently_playing is not None:
             self.stop_video()
 
-        rand_index = randint(0, len(self._video_library.get_all_videos())-1)
-
-
         vids = self._video_library.get_all_videos()
         ids = [vid.video_id for vid in vids]
-        rand_id = ids[rand_index]
 
-        self.play_video(rand_id)
+        all_flagged = True
+        for id in ids:
+            if id not in self.flags.keys():
+                all_flagged = False
+
+        if all_flagged:
+            print("No videos available")
+        else:
+            play = False
+            while not play:
+                rand_index = randint(0, len(self._video_library.get_all_videos()) - 1)
+                rand_id = ids[rand_index]
+                if rand_id not in self.flags.keys():
+                    play = True
+            self.play_video(rand_id)
 
         # print("play_random_video needs implementation")
 
@@ -145,9 +159,6 @@ class VideoPlayer:
     def show_playing(self):
         """Displays video currently playing."""
 
-
-
-
         if self.currently_playing is None:
             print("No video is currently playing")
         else:
@@ -182,10 +193,6 @@ class VideoPlayer:
             print("Successfully created new playlist: " + playlist_name)
             self.playlists[playlist_name] = []
 
-
-
-
-
         # print("create_playlist needs implementation")
 
     def get_key(self, name):
@@ -208,12 +215,15 @@ class VideoPlayer:
             if self.title_from_id(video_id) is None:
                 print("Cannot add video to " + playlist_name + ": Video does not exist")
             else:
-                key = self.get_key(name)
-                if video_id in self.playlists[key]:
-                    print("Cannot add video to " + playlist_name +": Video already added")
+                if vid.video_id in self.flags.keys():
+                    print("Cannot add video to " + playlist_name + ": Video is currently flagged (reason: " + self.flags[video_id] + ")")
                 else:
-                    print("Added video to " + playlist_name + ": " + vid.title)
-                    self.playlists[key].append(video_id)
+                    key = self.get_key(name)
+                    if video_id in self.playlists[key]:
+                        print("Cannot add video to " + playlist_name +": Video already added")
+                    else:
+                        print("Added video to " + playlist_name + ": " + vid.title)
+                        self.playlists[key].append(video_id)
         else:
             print("Cannot add video to " + playlist_name + ": Playlist does not exist")
 
@@ -407,7 +417,22 @@ class VideoPlayer:
             video_id: The video_id to be flagged.
             flag_reason: Reason for flagging the video.
         """
-        print("flag_video needs implementation")
+        # print("flag_video needs implementation")
+
+        if self._video_library.get_video(video_id) is not None:
+            if video_id in self.flags.keys():
+                print("Cannot flag video: Video is already flagged")
+            else:
+                if flag_reason == "":
+                    print("Successfully flagged video: " + self._video_library.get_video(video_id).title + " (reason: Not supplied)")
+                    self.flags[video_id] = "Not supplied"
+                else:
+                    print("Successfully flagged video: " + self._video_library.get_video(video_id).title + " (reason: dont_like_cats)")
+                    self.flags[video_id] = flag_reason
+        else:
+            print("Cannot flag video: Video does not exist")
+
+
 
     def allow_video(self, video_id):
         """Removes a flag from a video.
@@ -415,4 +440,13 @@ class VideoPlayer:
         Args:
             video_id: The video_id to be allowed again.
         """
-        print("allow_video needs implementation")
+        # print("allow_video needs implementation")
+
+        if self._video_library.get_video(video_id) is not None:
+            if video_id in self.flags.keys():
+                print("Successfully removed flag from video: " + self._video_library.get_video(video_id).title)
+                del self.flags[video_id]
+            else:
+                print("Cannot remove flag from video: Video is not flagged")
+        else:
+            print("Cannot remove flag from video: Video does not exist")
