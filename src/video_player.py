@@ -57,7 +57,11 @@ class VideoPlayer:
 
             tagstr = collate_tags(vid)
 
-            out.append(vid.title + " (" + vid.video_id + ") " + tagstr)
+            if vid.video_id in self.flags.keys():
+                out.append(vid.title + " (" + vid.video_id + ") " + tagstr + " - FLAGGED (reason: " + self.flags[vid.video_id] + ")")
+            else:
+                out.append(vid.title + " (" + vid.video_id + ") " + tagstr)
+
 
         out.sort()
 
@@ -271,7 +275,10 @@ class VideoPlayer:
                 ids = self.playlists[key]
 
                 for id in ids:
-                    print(self.get_full_title(id))
+                    if id in self.flags.keys():
+                        print(self.get_full_title(id) + " - FLAGGED (reason: " + self.flags[id] + ")")
+                    else:
+                        print(self.get_full_title(id))
         else:
             print("Cannot show playlist another_playlist: Playlist does not exist")
 
@@ -364,7 +371,8 @@ class VideoPlayer:
 
         for vid in self._video_library.get_all_videos():
             if term in vid.title.lower():
-                matches.append(vid)
+                if vid.video_id not in self.flags.keys():
+                    matches.append(vid)
 
         if len(matches) == 0:
             print("No search results for " + term)
@@ -394,7 +402,8 @@ class VideoPlayer:
 
         for vid in self._video_library.get_all_videos():
             if term in [lower_tags(tag) for tag in vid.tags]:
-                matches.append(vid)
+                if vid.video_id not in self.flags.keys():
+                    matches.append(vid)
 
         if len(matches) == 0:
             print("No search results for " + term)
@@ -427,7 +436,7 @@ class VideoPlayer:
                     print("Successfully flagged video: " + self._video_library.get_video(video_id).title + " (reason: Not supplied)")
                     self.flags[video_id] = "Not supplied"
                 else:
-                    print("Successfully flagged video: " + self._video_library.get_video(video_id).title + " (reason: dont_like_cats)")
+                    print("Successfully flagged video: " + self._video_library.get_video(video_id).title + " (reason: " + flag_reason + ")")
                     self.flags[video_id] = flag_reason
         else:
             print("Cannot flag video: Video does not exist")
